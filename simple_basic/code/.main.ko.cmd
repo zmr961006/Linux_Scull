@@ -1,0 +1,1 @@
+cmd_/home/hacker/git/Linux_Scull/simple_basic/code/main.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/hacker/git/Linux_Scull/simple_basic/code/main.ko /home/hacker/git/Linux_Scull/simple_basic/code/main.o /home/hacker/git/Linux_Scull/simple_basic/code/main.mod.o
