@@ -8,4 +8,4 @@
 *[内核测试/PROC创建文件](./test_kernel/README.md)
 
 
-*[竞态与并发与内核锁机制](./conur/README.md)
+*[竞态与并发与内核锁机制](./concur/README.md)
