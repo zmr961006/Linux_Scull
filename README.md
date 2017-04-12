@@ -1,3 +1,11 @@
-# Linux_Scull
-linux字符设备驱动程序及其扩展
-每一章节都是一个子系统的扩展
+# Linux 设备驱动程序模块
+
+根据《LDD3》整理，对通用设备驱动程序模块进行了抽取与分析
+
+*[基础设备驱动程序](./simple_basic/README.md)
+
+
+*[内核测试/PROC创建文件](./test_kernel/README.md)
+
+
+*[竞态与并发与内核锁机制](./conur/README.md)

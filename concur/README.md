@@ -226,3 +226,6 @@ static inline void atomic_set(atomic_t *v, int i)
 
 这里有一个关于RCU的论文合集，由内核RCU的编写者整理，读者可自行阅读http://www2.rdrop.com/users/paulmck/RCU/
 
+
+本章节有一个关于compelete 的模块，凡是读取这个模块的进程都会被阻塞，只要有写入的进程都会被唤起。
+![sss](./image/test.png)
