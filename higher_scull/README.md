@@ -109,6 +109,7 @@ void __wake_up(wait_queue_head_t *q, unsigned int mode, int nr, void *key;
 学过网络编程的同学都清楚这两个调用是干什么的，用来等待个文件流的操作。
 其实这并不是网络编程的专利，在内核中本来就是一种监听等待的机制。书上说的很明白，我们来看看他的数据结构图。
 
+![ss](./image/polol.png)
 
 很简单，当我们调用POLL的时候其实就创建了一个POLL_TABLE添加一个等待的队列，而这个队列上有三个结构项
 1.指向被打开的文件类型指针。
