@@ -38,6 +38,20 @@ int scull_quantum = SCULL_QUANTUM;
 int scull_qset    = SCULL_QSET;
 
 
+int delay = HZ; /* the default delay, expressed in jiffies */
+
+module_param(delay, int, 0);
+
+MODULE_AUTHOR("Alessandro Rubini");
+MODULE_LICENSE("Dual BSD/GPL");
+
+/* use these as data pointers, to implement four files in one function */
+enum jit_files {
+	JIT_BUSY,
+	JIT_SCHED,
+	JIT_QUEUE,
+	JIT_SCHEDTO
+};
 
 
 
@@ -56,6 +70,42 @@ static void scull_seq_stop(struct seq_file *s, void *v)
 	/* Actually, there's nothing to do here */
 }
 
+
+static void* dely_on(struct seq_file *s, void *v,int flag){
+	unsigned long j0, j1; /* jiffies */
+	wait_queue_head_t wait;
+
+	init_waitqueue_head (&wait);
+	j0 = jiffies;
+	j1 = j0 + 10;
+
+	switch((long)flag) {
+		case JIT_BUSY:
+			while (time_before(jiffies, j1))
+			break;
+		case JIT_SCHED:
+			while (time_before(jiffies, j1)) {
+				schedule();
+			}
+			break;
+		case JIT_QUEUE:
+			wait_event_interruptible_timeout(wait, 0, delay);
+			break;
+		case JIT_SCHEDTO:
+			set_current_state(TASK_INTERRUPTIBLE);
+			schedule_timeout (delay);
+			break;
+	}
+	j1 = jiffies; /* actual value after we delayed */
+
+	//len = sprintf(buf, "%9li %9li\n", j0, j1);
+	//*start = buf;
+	return flag;
+
+
+}
+
+
 static int scull_seq_show(struct seq_file *s, void *v)
 {
 	struct timeval tv1;
@@ -69,9 +119,11 @@ static int scull_seq_show(struct seq_file *s, void *v)
 	do_gettimeofday(&tv1);
 	tv2 = current_kernel_time();
 
-	/* print */
-	//len=0;
-	//len +=
+    
+	dely_on(s,v,JIT_BUSY);
+	
+			
+
  	seq_printf(s,"0x%08lx 0x%016Lx %10i.%06i\n"
 		       "%40i.%09i\n",
 		       j1, j2,
@@ -188,5 +240,4 @@ int scull_init_module(void)   /*获取主设备号，或者创建设备编号*/
 
 module_init(scull_init_module);
 module_exit(scull_cleanup_module);
-
 

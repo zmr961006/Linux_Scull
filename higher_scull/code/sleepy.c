@@ -1,20 +1,3 @@
-/*
- * sleepy.c -- the writers awake the readers
- *
- * Copyright (C) 2001 Alessandro Rubini and Jonathan Corbet
- * Copyright (C) 2001 O'Reilly & Associates
- *
- * The source code in this file can be freely used, adapted,
- * and redistributed in source or binary form, so long as an
- * acknowledgment appears in derived source files.  The citation
- * should list that the code comes from the book "Linux Device
- * Drivers" by Alessandro Rubini and Jonathan Corbet, published
- * by O'Reilly & Associates.   No warranty is attached;
- * we cannot take responsibility for errors or fitness for use.
- *
- * $Id: sleepy.c,v 1.7 2004/09/26 07:02:43 gregkh Exp $
- */
-
 #include <linux/module.h>
 #include <linux/init.h>
 

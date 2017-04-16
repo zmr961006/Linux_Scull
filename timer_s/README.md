@@ -60,3 +60,53 @@ static inline u64 get_jiffies_64(void)
 
 ![d](./image/ss.png)
 
+### 延时
+
+有时我们需要延时比较长的时间，内核给我们提供了一个函数time_before(jiffies,j1) ，这个函数用来不挺的测试jiffies 是否超过了我们设置的j1如果超过了则返回一个负值。
+我们使用如下的代码来忙等待我们设置的值。
+
+
+```
+case JIT_BUSY:
+			while (time_before(jiffies, j1))
+			break;
+			
+```
+
+我们执行cat 这个命令会不断的调用read ,我们每次查找其中含有22字符的信息，可以发现他是有我们设置的延时的。结果如下：
+
+![ss](./image/sss.png)
+
+此处需要实践运行才能看出来，截图看不出来等待。
+
+
+一个需要注意的问题是， 如果我们需要等待，最好调用schedule();让出处理器，效果差不多，直接提高效率，此处不再测试。
+
+```
+case JIT_SCHED:
+			while (time_before(jiffies, j1)) {
+				schedule();
+			}
+			break;
+```
+
+
+####  短延时
+
+当我们需要非常短暂的延时，使用时钟中断显然不是一个好方法，内核给我们提供了一些精度更高的延时函数，这是根据CPU 硬件不同设置不同的。我们不需要关心实现，首先看看定义"linux/delay.h"
+
+```
+void calibrate_delay(void);
+void msleep(unsigned int msecs);
+unsigned long msleep_interruptible(unsigned int msecs);
+void usleep_range(unsigned long min, unsigned long max);
+
+static inline void ssleep(unsigned int seconds)
+{
+	msleep(seconds * 1000);
+}
+```
+
+
+
+
