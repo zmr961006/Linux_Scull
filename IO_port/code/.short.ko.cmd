@@ -1,0 +1,1 @@
+cmd_/home/hacker/git/Linux_Scull/IO_port/code/short.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/hacker/git/Linux_Scull/IO_port/code/short.ko /home/hacker/git/Linux_Scull/IO_port/code/short.o /home/hacker/git/Linux_Scull/IO_port/code/short.mod.o
