@@ -7,7 +7,8 @@ device="short"
 
 # Remove stale nodes
 
-rm -f /dev/${device}0
+rm -f /dev/${device}[0-7] /dev/${device}[0-7][ps] \
+    /dev/${device}int /dev/${device}print
 
 
 
