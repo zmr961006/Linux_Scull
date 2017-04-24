@@ -39,4 +39,14 @@
 *[IO端口通信](./IO_port/README.md)
 
 
+*[内核数据类型](./kernel_DS/README.md)
+
+
+*[内核中断处理](./interrupt/README.md)
+
+
+*[PCI驱动程序](./PCI_driver/README.md)
+
+
+
 
