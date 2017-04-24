@@ -42,4 +42,45 @@ ps: struct file -> path -> dentry -> inode
 
 ps : disabled rmmove https://lwn.net/Articles/380931/
 
+
+### 端口测试
 ![ss](./image/ss.png)
+
+### 用户空间访问IO 端口
+
+### 串操作  并口操作
+
+### 使用IO 内存
+
+设备通信的另一个主要通信机制通过使用影射到内存的寄存器或设备内存，在那里可以通过总线设备的访问，例如视频数据或以太网数据包。
+
+IO内存可能通过内存页表或者访问无需页表类似与IO端口的操作。
+
+在使用IO内存区域前，首先要分配内存区域的接口。
+
+
+```
+#define __request_mem_region(start,n,name, excl) __request_region(&iomem_resource, (start), (n), (name), excl)
+
+struct resource * __request_region(struct resource *,
+					resource_size_t start,
+					resource_size_t n,
+					const char *name, int flags);
+
+
+@resource   资源保存结构
+@start      从start开始分配内存区域
+@n          分配长度
+@excl/flags 分配标志 
+```
+
+
+再此，我们还必须确保内存对于内核是可以访问的，我们使用ioremap来进行进行影射。
+
+```
+```
+
+### 访问IO内存
+
+我们可以发现，对于IO 内存，内核为我们提供了一系列的访问函数，这也是一种简化的思想把，分配处理方式和底层存取，虽然不明显但是类似与数据包的存储。
+
