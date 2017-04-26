@@ -25,7 +25,7 @@ clean:
 
 else
     # called from kernel build system: just declare what our modules are
-    obj-m := irq_qu.o tasklet.o workqueue_my.o
+    obj-m := pci_skel.o
 endif
 
 
