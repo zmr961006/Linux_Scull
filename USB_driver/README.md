@@ -253,3 +253,179 @@ USB 接口本身被捆绑为配置。
 接口通常具有一个或多个更多配置
 
 接口没有或者具有一个以上的端点 
+
+
+### URB 
+
+usb请求块urb（usb request block,urb）是usb设备驱动中用来描述与usb设备通信所用的基本载体和核心数据结构。
+是usb主机和设备通信的“电波”。
+
+
+一个 urb 用来发送或接受数据到或者从一个特定 USB 设备上的特定的 USB 端点, 以一种异步的方式. 它用起来非常象一个 kiocb 结构被用在文件系统异步 I/O 代码, 或者如同一个 struct skbuff 用在网络代码中. 一个 USB 设备驱动可能分配许多 urb 给一个端点或者可能重用单个 urb 给多个不同的端点, 根据驱动的需要. 设备中的每个端点都处理一个 urb 队列, 以至于多个 urb 可被发送到相同的端点, 在队列清空之前. 一个 urb 的典型生命循环如下:
+
+1.由一个 USB 设备驱动创建.
+
+2.分配给一个特定 USB 设备的特定端点.
+
+3.由USB设备驱动程序提交到USB核心。
+
+4.提交给特定设备的被 USB 核心指定的 USB 主机控制器驱动, .
+
+5.由USB 主机控制器处理, 它从设备进行USB传送。
+
+6.当 urb 完成, USB 主机控制器驱动通知 USB 设备驱动程序.
+
+
+#### struct urb
+
+```
+struct urb {
+	/* private: usb core and host controller only fields in the urb */
+	struct kref kref;		/* reference count of the URB */
+	void *hcpriv;			/* private data for host controller */
+	atomic_t use_count;		/* concurrent submissions counter */
+	atomic_t reject;		/* submissions will fail */
+	int unlinked;			/* unlink error code */
+
+	/* public: documented fields in the urb that can be used by drivers */
+	struct list_head urb_list;	/* list head for use by the urb's
+					 * current owner */
+	struct list_head anchor_list;	/* the URB may be anchored */
+	struct usb_anchor *anchor;
+	struct usb_device *dev;		/* (in) pointer to associated device */
+	struct usb_host_endpoint *ep;	/* (internal) pointer to endpoint */
+	unsigned int pipe;		/* (in) pipe information */
+	unsigned int stream_id;		/* (in) stream ID */
+	int status;			/* (return) non-ISO status */
+	unsigned int transfer_flags;	/* (in) URB_SHORT_NOT_OK | ...*/
+	void *transfer_buffer;		/* (in) associated data buffer */
+	dma_addr_t transfer_dma;	/* (in) dma addr for transfer_buffer */
+	struct scatterlist *sg;		/* (in) scatter gather buffer list */
+	int num_mapped_sgs;		/* (internal) mapped sg entries */
+	int num_sgs;			/* (in) number of entries in the sg list */
+	u32 transfer_buffer_length;	/* (in) data buffer length */
+	u32 actual_length;		/* (return) actual transfer length */
+	unsigned char *setup_packet;	/* (in) setup packet (control only) */
+	dma_addr_t setup_dma;		/* (in) dma addr for setup_packet */
+	int start_frame;		/* (modify) start frame (ISO) */
+	int number_of_packets;		/* (in) number of ISO packets */
+	int interval;			/* (modify) transfer interval
+					 * (INT/ISO) */
+	int error_count;		/* (return) number of ISO errors */
+	void *context;			/* (in) context for completion */
+	usb_complete_t complete;	/* (in) completion routine */
+	struct usb_iso_packet_descriptor iso_frame_desc[0];
+					/* (in) ISO ONLY */
+};
+```
+
+这个结构体在"linux/usb.h" 中，在源码中每一项内容都有详细的说明，我们不再此讨论。
+
+#### usb的操作
+
+创建和销毁一个URB 注意此处内部使用引用计数机制，我们必须使用创建函数创建。
+
+```
+struct urb * usb_alloc(int iso_packets,int mem_flags);
+```
+@iso_packets  等时数据包量
+
+@mem_flags    内核内存分配标志
+
+放弃一个URB 
+
+```
+void usb_free(struct urb *urb);
+```
+中断 urb
+
+函数 usb_fill_int_urb 是一个帮忙函数, 来正确初始化一个urb 来发送给 USB 设备的一个中断端点:
+```
+void usb_fill_int_urb(struct urb *urb, struct usb_device *dev,
+unsigned int pipe, void *transfer_buffer,
+int buffer_length, usb_complete_t complete,void *context, int interval);
+```
+
+这个函数包含许多参数:
+struct urb *urb 指向要被初始化的 urb 的指针.
+
+struct usb_device *dev这个 urb 要发送到的 USB 设备.
+
+unsigned int pipe这个 urb 要被发送到的 USB 设备的特定端点. 这个值被创建, 使用前面提过的 usb_sndintpipe 或者
+usb_rcvintpipe 函数.
+
+void *transfer_buffer指向缓冲的指针, 从那里外出的数据被获取或者进入数据被接受. 注意这不能是一个静态的缓冲并且必须使用 kmalloc 调用来创建.
+
+int buffer_length缓冲的长度, 被 transfer_buffer 指针指向.
+
+usb_complete_t complete指针, 指向当这个 urb 完成时被调用的完成处理者.
+
+void *context指向数据块的指针, 它被添加到这个 urb 结构为以后被完成处理者函数获取.
+
+int interval这个 urb 应当被调度的间隔. 见之前的 struct urb 结构的描述, 来找到这个值的正确单位.
+
+批量 urb
+
+块 urb 被初始化非常象中断 urb. 做这个的函数是 usb_fill_bulk_urb, 它看来如此:
+```
+void usb_fill_bulk_urb(struct urb *urb, struct usb_device *dev,
+unsigned int pipe, void *transfer_buffer,
+int buffer_length, usb_complete_t complete,void *context);
+```
+
+这个函数参数和 usb_fill_int_urb 函数的都相同. 但是, 没有 interval 参数因为 bulk urb 没有间隔值. 请注意这个 unsiged int pipe 变量必须被初始化用对 usb_sndbulkpipe 或者 usb_rcvbulkpipe 函数的调用.
+
+usb_fill_int_urb 函数不设置 urb 中的 transfer_flags 变量, 因此任何对这个成员的修改不得不由这个驱动自己完成.
+
+控制 urb
+
+控制 urb 被初始化几乎和 块 urb 相同的方式, 使用对函数 usb_fill_control_urb 的调用:
+```
+void usb_fill_control_urb(struct urb *urb, struct usb_device *dev,
+unsigned int pipe, unsigned char *setup_packet,
+void *transfer_buffer, int buffer_length,
+usb_complete_t complete, void *context);
+```
+函数参数和 usb_fill_bulk_urb 函数都相同, 除了有个新参数, unsigned char *setup_packet, 它必须指向要发送给端点的 setup 报文数据. 还有, unsigned int pipe 变量必须被初始化, 使用对 usb_sndctrlpipe 或者 usb_rcvictrlpipe 函数的调用.
+
+usb_fill_control_urb 函数不设置 transfer_flags 变量在 urb 中, 因此任何对这个成员的修改必须游驱动自己完成. 大部分驱动不使用这个函数, 因为使用在"USB 传送不用 urb"一节中介绍的同步 API 调用更简单.
+
+等时urb
+
+不幸的是, 同步 urb 没有一个象中断, 控制, 和块 urb 的初始化函数. 因此它们必须在驱动中"手动"初始化, 在它们可被提交给 USB 核心之前. 下面是一个如何正确初始化这类 urb 的例子. 它是从 konicawc.c 内核驱动中取得的, 它位于主内核源码树的 drivers/usb/media 目录.
+```
+urb->dev = dev;
+urb->context = uvd;
+urb->pipe = usb_rcvisocpipe(dev, uvd->video_endp-1);
+urb->interval = 1;
+urb->transfer_flags = URB_ISO_ASAP;
+urb->transfer_buffer = cam->sts_buf[i];
+urb->complete = konicawc_isoc_irq;
+urb->number_of_packets = FRAMES_PER_DESC;
+urb->transfer_buffer_length = FRAMES_PER_DESC;
+for (j=0; j < FRAMES_PER_DESC; j++) {
+ urb->iso_frame_desc[j].offset = j;
+ urb->iso_frame_desc[j].length = 1;
+}
+```
+
+提交 urb
+
+一旦 urb 被正确地创建,并且被 USB 驱动初始化, 它已准备好被提交给 USB 核心来发送出到 USB 设备. 这通过调用函数 usb_submit_urb 实现:
+int usb_submit_urb(struct urb *urb, int mem_flags);
+urb 参数是一个指向 urb 的指针, 它要被发送到设备. mem_flags 参数等同于传递给 kmalloc 调用的同样的参数, 并且用来告诉 USB 核心如何及时分配任何内存缓冲在这个时间.
+
+在 urb 被成功提交给 USB 核心之后, 应当从不试图存取 urb 结构的任何成员直到完成函数被调用.
+因为函数 usb_submit_urb 可被在任何时候被调用(包括从一个中断上下文), mem_flags 变量的指定必须正确. 真正只有 3 个有效值可用, 根据何时 usb_submit_urb 被调用:
+
+GFP_ATOMIC这个值应当被使用无论何时下面的是真:
+调用者处于一个 urb 完成处理者, 一个中断, 一个后半部, 一个 tasklet, 或者一个时钟回调.
+调用者持有一个自旋锁或者读写锁. 注意如果正持有一个旗标, 这个值不必要.
+current->state 不是 TASK_RUNNING. 状态一直是 TASK_RUNNING 除非驱动已自己改变 current 状态.
+
+GFP_NOIO这个值应当被使用, 如果驱动在块 I/O 补丁中. 它还应当用在所有的存储类型的错误处理补丁中.
+
+GFP_KERNEL这应当用在所有其他的情况中, 不属于之前提到的类别.
+
+
+
