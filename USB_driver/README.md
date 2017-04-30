@@ -428,4 +428,19 @@ GFP_NOIO这个值应当被使用, 如果驱动在块 I/O 补丁中. 它还应当
 GFP_KERNEL这应当用在所有其他的情况中, 不属于之前提到的类别.
 
 
+urb主处理流程
 
+![d](./image/urbc.png)
+
+###  内核变化
+usb_buffer_alloc/free  修改
+http://www.360doc.com/content/13/0403/23/11400509_275841401.shtml
+
+### 创建一个新的USB 驱动程序
+
+在./code/ 代码
+
+结果：
+![](./image/dd.png)
+
+*代码流程图
